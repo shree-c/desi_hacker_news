@@ -1,5 +1,8 @@
 import express from 'express'
 import main_router from './routes/main.js'
+import env from 'env-var'
+
+const PORT = env.get('PORT').required().asPortNumber()
 
 const app = express()
 
@@ -13,4 +16,4 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/', main_router)
 
-app.listen(4000, () => console.log('listining'))
+app.listen(PORT, () => console.log(`listining at ${PORT}`))

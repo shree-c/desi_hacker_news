@@ -1,6 +1,12 @@
 <%- include('includes/header.ejs') %>
-  the list of links would come here
-  <a href="/submit">Submit link</a>
+  <div class="posts">
+    <% posts.forEach((post=> { %>
+      <div class="post">
+        <%= `${post.url_str} --- ${post.title} --- ${post.description_str} `%>
+      </div>
+      <%})) %>
+  </div>
+  </div>
   </body>
 
   </html>

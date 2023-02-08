@@ -1,11 +1,9 @@
 import { Router } from 'express';
-import { create_post } from '../controllers/main.js';
+import { create_post, get_posts_cn } from '../controllers/main.js';
 
 const router = Router()
 
-router.get('/', (req, res) => {
-  res.render('index')
-})
+router.get('/', get_posts_cn)
 
 router.get('/submit', (req, res) => {
   res.render('submit')
