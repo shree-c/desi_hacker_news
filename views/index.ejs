@@ -2,7 +2,10 @@
   <div class="posts">
     <% posts.forEach((post=> { %>
       <div class="post">
-        <%= `${post.url_str} --- ${post.title} --- ${post.description_str} `%>
+        <%- `<p class="title"><a href="${post.url_str}">${post.title}</a><span class="url">
+            <a href="/from?id=${post.url_str}">
+              (${post.url_str})</a></span></p>`
+          %>
       </div>
       <%})) %>
   </div>

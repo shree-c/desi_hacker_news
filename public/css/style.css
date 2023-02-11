@@ -12,12 +12,14 @@
 nav {
   background-color: var(--main-brand);
   margin: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 nav .left {
   display: flex;
   flex-wrap: wrap;
-
 }
 
 nav .nav_item {

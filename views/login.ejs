@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | signup</title>
+</head>
+
+<body>
+  <form action="/login" method="post">
+    <p>Login</p>
+    <label>
+      username: <input type="text" name="un" size="20" autocapitalize="none" spellcheck="false" autofocus="true">
+    </label>
+    <br>
+    <label>
+      password: <input type="password" name="pass" size="20" autocapitalize="none" spellcheck="false" autofocus="true"
+        autocomplete="false">
+    </label>
+    <br>
+    <input type="submit" value="login">
+  </form>
+  <form action="/login" method="post">
+    <p>signup</p>
+    <input type="hidden" name="new" value="true">
+    <label>
+      username: <input type="text" name="un" size="20" autocapitalize="none" spellcheck="false" autofocus="true">
+    </label>
+    <br />
+    <label>
+      password: <input type="password" name="pass" size="20" autocapitalize="none" spellcheck="false" autofocus="true">
+    </label>
+    <br>
+    <input type="submit" value="signup">
+  </form>
+</body>
+
+</html>
