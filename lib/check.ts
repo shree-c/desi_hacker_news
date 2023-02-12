@@ -32,7 +32,7 @@ export async function check_pass_for_username(un: string, pass: string) {
   if (!user) {
     throw new Error('E-6')
   } else {
-    if (await check_password(user.password, pass)) {
+    if (!await check_password(user.password, pass)) {
       throw new Error('E-7')
     }
   }

@@ -21,12 +21,11 @@ export function generatePasswordHash(pass: string, salt: string | BinaryLike): P
   })
 }
 
-export function check_password(pass: string, hash: string): Promise<boolean> {
+export function check_password(hash: string, pass: string): Promise<boolean> {
   return new Promise(async (resolve, reject) => {
     const salt = hash.slice(64)
-    const pass_hash = hash.slice(0, 64)
     const generated_hash = await generatePasswordHash(pass, salt)
-    if (pass_hash === generated_hash)
+    if (hash === generated_hash)
       resolve(true)
     else
       resolve(false)

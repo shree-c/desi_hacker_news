@@ -2,6 +2,11 @@ import express from 'express'
 import main_router from './routes/main.js'
 import env from 'env-var'
 import error_map from './lib/error_map.js'
+import cookieParser from 'cookie-parser'
+import controller_events from './events/obj.js'
+import { handle_controller_events } from './events/event_handlers.js'
+
+handle_controller_events(controller_events)
 
 const PORT = env.get('PORT').required().asPortNumber()
 
@@ -13,11 +18,14 @@ app.use(express.static('public'))
 
 app.use(express.json())
 
+app.use(cookieParser())
+
 app.use(express.urlencoded({ extended: true }))
 
 app.use('/', main_router)
 
 app.use((err, req, res, next) => {
+  console.error(err)
   res.send(error_map[err.message] || 'internal server error')
 })
 app.listen(PORT, () => console.log(`listining at ${PORT}`))

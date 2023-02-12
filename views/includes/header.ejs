@@ -17,6 +17,13 @@
         <div class="nav_item"><a href="/submit">Submit</a></div>
       </div>
       <div class="right">
-        <div class="nav_item"><a href="/login">login</a></div>
+        <% if (username) { %>
+
+          <div class="nav_item"><a href=<%=`/${username}`%>><%= username %></a></div>
+          <div class="nav_item"><a href="/logout">logout</a></div>
+
+          <% } else {%>
+            <div class="nav_item"><a href="/login">login</a></div>
+            <%}%>
       </div>
     </nav>

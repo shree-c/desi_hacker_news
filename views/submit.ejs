@@ -1,13 +1,14 @@
 <%- include('includes/header.ejs') %>
   </body>
   this is submit page
-  <form action="/submit-link" method="post">
+  <form action="/submit-link" method="post" autocomplete="off">
+    <input type="hidden" name="username" value="<%= username %>">
     <label for="url">URL:</label>
     <input type="text" name="url" id="url" required><br />
     <label for="title">Title:</label>
     <input type="text" name="title" id="title" required><br />
     <label for="des">Description:</label>
-    <input type="text" name="description" id="des" required><br />
+    <textarea name="description" id="des"></textarea><br />
     <input type="submit" value="submit">
   </form>
 
