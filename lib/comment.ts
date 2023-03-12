@@ -5,11 +5,23 @@ const get_comment_for_a_parent = db.prepare(`
   select * from postsandcomments where parent = ?
 `);
 
+const get_vote_for_an_item_user = db.prepare(`
+  select value from vote where id = @id and user = @username
+`)
 
-export function fetch_comments_tree(post_id: string): any[] {
+export function fetch_comments_tree(post_id: string, username: string | undefined): any[] {
   const comments = get_comment_for_a_parent.all(post_id);
   comments.forEach((e) => {
-    e.children = fetch_comments_tree(e.id);
+    if (username) {
+      const vote_value = get_vote_for_an_item_user.get({
+        id: e.id,
+        username
+      })
+      if (vote_value) {
+        e.vote = vote_value.value
+      }
+    }
+    e.children = fetch_comments_tree(e.id, username);
   });
   return comments;
 }
@@ -20,8 +32,14 @@ export function build_html_form_comment_tree(tree: any[]): string {
     str += `
     <div class="comment" id=${e.id} >
       <span> 
-      <a href="/vote?id=${e.id}&what=up" class="clicky up">△</a>
-      <a href="/vote?id=${e.id}&what=dw" class="clicky dw">▽</a>
+      <a href="/vote?id=${e.id}&what=${(e.vote === 1) ? 'unup' : 'up'}" 
+      class="clicky ${(e.vote === 1) ? 'upd' : 'up'}">
+      ${(e.vote === 1) ? '▲' : '△'}
+      </a>
+      <a href="/vote?id=${e.id}&what=${(e.vote === -1) ? 'undw' : 'dw'}" 
+      class="clicky ${(e.vote === -1) ? 'dwd' : 'dw'}">
+      ${(e.vote === -1) ? '▼' : '▽'}
+      </a>
       </span>
       <p class="comtex">
         ${e.description_str}

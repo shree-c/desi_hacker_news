@@ -155,7 +155,6 @@ export function db_manage_vote(
   username: string,
   vote: string
 ): void {
-  console.log(vote)
   const existing_vote = get_vote.get({
     id,
     username
@@ -170,17 +169,13 @@ export function db_manage_vote(
   } else {
     let final_vote_value = existing_vote.value
     if (existing_vote.value === 1) {
-      if (vote === 'up' || vote === 'undw') {
-        return
-      } else if (vote === 'unup') {
+      if (vote === 'unup') {
         final_vote_value = 0
       } else if (vote === 'dw') {
         final_vote_value = -1
       }
     } else if (existing_vote.value === -1) {
-      if (vote === 'dw' || vote === 'unup') {
-        return
-      } else if (vote === 'undw') {
+      if (vote === 'undw') {
         final_vote_value = 0
       } else if (vote === 'up') {
         final_vote_value = 1
@@ -192,6 +187,7 @@ export function db_manage_vote(
         username
       })
       return
+
     }
     update_vote.run({
       id,

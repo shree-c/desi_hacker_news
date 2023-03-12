@@ -158,7 +158,7 @@ export async function get_single_post(
         },
         username: req.username,
         commentsHtml: build_html_form_comment_tree(
-          fetch_comments_tree(post.id)
+          fetch_comments_tree(post.id, req.username)
         ),
       });
     } else {
