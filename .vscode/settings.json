@@ -1,0 +1,10 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "maindb",
+      "database": "${workspaceFolder:desi_hacker_news}/main.db"
+    }
+  ]
+}

@@ -4,6 +4,15 @@
   --main-brand: #9ac4f8
 }
 
+body {
+  font-family: sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
 #outermost {
   margin: auto;
   width: 85%;
@@ -38,6 +47,34 @@ nav a {
 
 @media only screen and (min-width: 300px) and (max-width: 750px) {
   #outermost {
-    width: 100%
+    width: 100%;
   }
+
+  nav {
+    margin: 0;
+  }
+
+  body {
+    padding: 0;
+    margin: 0;
+  }
+
+}
+
+.title {
+  margin: 0;
+}
+
+.mild {
+  color: #5c5c5c;
+  text-decoration: none;
+  font-size: 0.6rem;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.children {
+  margin-left: 30px;
 }

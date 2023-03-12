@@ -19,7 +19,7 @@
       <div class="right">
         <% if (username) { %>
 
-          <div class="nav_item"><a href=<%=`/${username}`%>><%= username %></a></div>
+          <div class="nav_item"><a href=<%=`/user?id=${username}`%>><%= username %></a></div>
           <div class="nav_item"><a href="/logout">logout</a></div>
 
           <% } else {%>

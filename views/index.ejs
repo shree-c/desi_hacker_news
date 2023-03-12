@@ -1,11 +1,21 @@
 <%- include('includes/header.ejs') %>
   <div class="posts">
-    <% posts.forEach((post=> { %>
+    <% posts.forEach(((post,i)=> { %>
       <div class="post">
-        <%- `<p class="title"><a href="${post.url_str}">${post.title}</a><span class="url">
-            <a href="/from?id=${post.url_str}">
-              (${post.url_str})</a></span></p>`
-          %>
+        <p class="title">
+          <%= i + 1%> <a href="<%= post.url_str%>">
+              <%= post.title%>
+            </a><span class="url">
+              <a href="/from?id=<%=post.url_str%>" class="mild underline">
+                (<%=post.url_str%>)</a></span>
+        </p>
+        <div class="sub_post"><a class="username mild" href="/user?id=<%= post.username %>">
+            <%= post.username %>
+          </a>
+          <a href="/item?id=<%= post.id %>" class="time mild">
+            <%=post.relative_time %>
+          </a>
+        </div>
       </div>
       <%})) %>
   </div>

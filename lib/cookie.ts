@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
-import { db_store_cookie_for_username, db_get_user_from_auth_token } from './sql_functions/transactions.js'
+import { db_store_cookie_for_username, 
+  db_get_user_from_auth_token } from './sql_functions/transactions.js'
 
 export function gen_cookie(un: string, d: Date): string {
   const cookie = randomUUID()

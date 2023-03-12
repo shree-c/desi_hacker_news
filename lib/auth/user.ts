@@ -11,7 +11,8 @@ export function generateSalt(size: number): Promise<BinaryLike> {
   })
 }
 
-export function generatePasswordHash(pass: string, salt: string | BinaryLike): Promise<string | Error> {
+export function generatePasswordHash
+(pass: string, salt: string | BinaryLike): Promise<string | Error> {
   return new Promise(async (resolve, reject) => {
     scrypt(pass, salt, 32, (err, key) => {
       if (err)

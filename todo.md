@@ -1,7 +1,15 @@
 -[x] destroy cookie on server after logout
--[x] do routine cleanup of expired cookies
-
+-[] do routine cleanup of expired cookies
 -[x] join posts to user
+- [] user profile
+- [] ability to add email by the user
+  - [] email varification
+- [] comment on a post
+- [] comment rendering
+- [] homepage timeline and pagination
+- [] comment pagination
+- [] upvotes
+- [] time function
 
-
-
+- [] send approprite error messages
+- [] make sure foreign key constraint works

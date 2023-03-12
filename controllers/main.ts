@@ -1,75 +1,207 @@
 declare global {
   namespace Express {
     interface Request {
-      username: string
+      username: string;
     }
   }
 }
-import { Request, Response, NextFunction } from 'express'
-import { db_add_post, db_get_posts, db_create_record } from '../lib/sql_functions/transactions.js'
-import { check_username_should_not_exist, check_username_rules, check_password_rule, check_pass_for_username, check_username_exists } from '../lib/check.js'
-import { gen_cookie, get_username_from_auth_token } from '../lib/cookie.js'
-import { generatePasswordHash, generateSalt } from '../lib/auth/user.js'
-import controller_events from '../events/obj.js'
+import {
+  build_html_form_comment_tree,
+  fetch_comments_tree,
+} from "../lib/comment.js";
+import { Request, Response, NextFunction } from "express";
+import {
+  db_add_post,
+  db_get_posts,
+  db_create_record,
+  db_does_user_exist,
+  db_get_single_post,
+  db_add_comment,
+  db_manage_vote
+} from "../lib/sql_functions/transactions.js";
+import {
+  check_username_should_not_exist,
+  check_username_rules,
+  check_password_rule,
+  check_pass_for_username,
+  check_username_exists,
+} from "../lib/check.js";
+import { gen_cookie, get_username_from_auth_token } from "../lib/cookie.js";
+import { generatePasswordHash, generateSalt } from "../lib/auth/user.js";
+import controller_events from "../events/obj.js";
+import { add_relative_time, get_duration_str } from "../lib/time.js";
 
-export async function create_post(req: Request, res: Response, next: NextFunction): Promise<void> {
-  await db_add_post(req.body)
-  res.redirect('/')
+export async function create_post(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  req.body.timestamp = new Date().getTime();
+  await db_add_post(req.body);
+  res.redirect("/");
 }
 
-export async function handle_submit(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function handle_submit(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   if (!req.username) {
-    res.render('login', { message: 'You have to be logged in to submit.' })
+    res.render("login", { message: "You have to be logged in to submit." });
   } else {
-    res.render('submit', { username: req.username })
+    res.render("submit", { username: req.username });
   }
 }
 
-export async function get_posts_cn(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const posts = db_get_posts()
-  res.render('index', { posts, username: req.username })
+export async function get_posts_cn(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const posts = db_get_posts();
+  res.render("index", {
+    posts: add_relative_time(posts),
+    username: req.username,
+  });
 }
 
-export async function handle_login(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function handle_login(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   if (req.body.new) {
-    check_username_rules(req.body.un)
-    check_username_should_not_exist(req.body.un)
-    check_password_rule(req.body.pass)
+    check_username_rules(req.body.un);
+    check_username_should_not_exist(req.body.un);
+    check_password_rule(req.body.pass);
     db_create_record({
       un: req.body.un,
-      pass: await generatePasswordHash(req.body.pass, await generateSalt(16))
-    })
-    const d = new Date()
-    d.setDate(d.getDate() + 10)
-    res.cookie('auth', gen_cookie(req.body.un, d), {
+      pass: await generatePasswordHash(req.body.pass, await generateSalt(16)),
+    });
+    const d = new Date();
+    d.setDate(d.getDate() + 10);
+    res.cookie("auth", gen_cookie(req.body.un, d), {
       expires: d,
       httpOnly: true,
-      sameSite: 'strict'
-    })
-    res.redirect('/')
+      sameSite: "strict",
+    });
+    res.redirect("/");
   } else {
-    check_username_exists(req.body.un)
-    await check_pass_for_username(req.body.un, req.body.pass)
-    const d = new Date()
-    d.setDate(d.getDate() + 10)
-    res.cookie('auth', gen_cookie(req.body.un, d), {
+    check_username_exists(req.body.un);
+    await check_pass_for_username(req.body.un, req.body.pass);
+    const d = new Date();
+    d.setDate(d.getDate() + 10);
+    res.cookie("auth", gen_cookie(req.body.un, d), {
       expires: d,
       httpOnly: true,
-      sameSite: 'strict'
-    })
-    res.redirect('/')
+      sameSite: "strict",
+    });
+    res.redirect("/");
   }
 }
 
 export function check_login(req: Request, res: Response, next: NextFunction) {
   if (req.cookies.auth) {
-    req.username = get_username_from_auth_token(req.cookies.auth)
+    req.username = get_username_from_auth_token(req.cookies.auth);
   }
-  next()
+  next();
 }
 
 export function handle_logout(req: Request, res: Response, next: NextFunction) {
-  res.clearCookie('auth')
-  controller_events.emit('clearCookie', req.username)
-  res.redirect('/')
+  res.clearCookie("auth");
+  controller_events.emit("clearCookie", req.username);
+  res.redirect("/");
+}
+
+export function get_user_profile(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.query.id) {
+    res.render("user", {
+      error: "no such user",
+      username: req.username,
+    });
+  } else {
+    const user = db_does_user_exist(req.query.id + "");
+    if (!user) {
+      res.render("user", {
+        error: "no such user",
+        username: req.username,
+      });
+    } else {
+      res.render("user", {
+        error: null,
+        user,
+        username: req.username,
+      });
+    }
+  }
+}
+
+export async function get_single_post(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const id = req.query.id;
+  if (!id || typeof id !== "string") {
+    res.status(404).render("404");
+  } else {
+    const post = db_get_single_post(id);
+    if (post) {
+      res.render("single_post", {
+        post: {
+          ...post,
+          relative_time: get_duration_str(post.timestamp),
+        },
+        username: req.username,
+        commentsHtml: build_html_form_comment_tree(
+          fetch_comments_tree(post.id)
+        ),
+      });
+    } else {
+      res.status(404).render("404");
+    }
+  }
+}
+
+export function handle_comment(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.username) {
+    res.render("login",
+      { message: "You have to be logged in to comment." });
+  } else {
+    if (typeof req.body.text !== "string"
+      || req.body.text.length === 0) {
+      throw new Error("comment cannot be empty");
+    }
+    db_add_comment(req.username, req.body.text, req.body.parent);
+    res.redirect(req.body.goto);
+  }
+}
+
+const votes = {
+  up: 'up',
+  unup: 'unup',
+  dw: 'dw',
+  undw: 'undw'
+}
+
+export function handle_vote(req: Request, res: Response, next: NextFunction) {
+  if (!req.username) {
+    res.render("login",
+      { message: "You have to be logged in to comment." });
+  } else {
+    if (typeof req.query.id !== 'string' || typeof req.query.what !== 'string' || !votes[req.query.what]) {
+      res.status(404).send('bad request')
+    } else {
+      db_manage_vote(req.query.id, req.username, votes[req.query.what])
+      res.send('ok')
+    }
+  }
 }
