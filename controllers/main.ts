@@ -6,8 +6,7 @@ declare global {
   }
 }
 import {
-  build_html_form_comment_tree,
-  fetch_comments_tree,
+  get_comment_section_html_for_a_post
 } from "../lib/comment.js";
 import { Request, Response, NextFunction } from "express";
 import {
@@ -17,7 +16,8 @@ import {
   db_does_user_exist,
   db_get_single_post,
   db_add_comment,
-  db_manage_vote
+  db_manage_vote,
+  add_comment_and_vote_count
 } from "../lib/sql_functions/transactions.js";
 import {
   check_username_should_not_exist,
@@ -53,12 +53,12 @@ export async function handle_submit(
   }
 }
 
-export async function get_posts_cn(
+export async function get_posts(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const posts = db_get_posts();
+  const posts = add_comment_and_vote_count(db_get_posts(), req.username);
   res.render("index", {
     posts: add_relative_time(posts),
     username: req.username,
@@ -157,9 +157,8 @@ export async function get_single_post(
           relative_time: get_duration_str(post.timestamp),
         },
         username: req.username,
-        commentsHtml: build_html_form_comment_tree(
-          fetch_comments_tree(post.id, req.username)
-        ),
+        comment_section: get_comment_section_html_for_a_post(parseInt(id),
+          req.username),
       });
     } else {
       res.status(404).render("404");

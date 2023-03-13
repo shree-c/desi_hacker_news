@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   check_login,
   create_post,
-  get_posts_cn,
+  get_posts,
   handle_login,
   handle_logout,
   handle_submit,
@@ -17,7 +17,7 @@ const router = Router();
 
 router.use(await async_handler(check_login));
 
-router.get("/", get_posts_cn);
+router.get("/", get_posts);
 
 router.get("/submit", await async_handler(handle_submit));
 

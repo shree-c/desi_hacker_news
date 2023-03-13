@@ -23,6 +23,7 @@ function removeUpvote(e, url) {
   e.href = url.pathname + url.search;
   e.innerText = "△";
 }
+
 function vote(e) {
   const url = new URL(e.href, location);
   if (e.classList.contains("up")) {
@@ -51,6 +52,7 @@ function vote(e) {
     removeDownvote(e, url);
   }
 }
+
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("clicky")) {
     e.preventDefault();

@@ -1,34 +1,37 @@
 <%- include('includes/header.ejs') %>
   <div class="post">
-    <p class="title">
+    <div class="title">
       <a href="<%= post.url_str%>">
         <%= post.title%>
       </a>
-    </p>
-    <div class="url">
-      <a href="/from?id=<%=post.url_str%>" class="mild underline">
-        (<%=post.url_str%>)
-      </a>
-      <a class="username mild" href="/user?id=<%= post.username %>">
-        <%= post.username %>
-      </a>
-      <a href="/item?id=<%= post.id %>" class="time mild">
-        <%=post.relative_time %>
-      </a>
+      <div />
+      <div class="url">
+        <a href="/from?id=<%=post.url_str%>" class="mild underline">
+          (<%=post.url_str%>)
+        </a>
+        <a class="username mild" href="/user?id=<%= post.username %>">
+          <%= post.username %>
+        </a>
+        <a href="/item?id=<%= post.id %>" class="time mild">
+          <%=post.relative_time %>
+        </a>
+        <a href="/item?id=<%= post.id %>" class="time mild">
+          <%=comment_section.comment_count %> comments
+        </a>
+      </div>
+      <div class="desc">
+        <%= post.description_str %>
+      </div>
     </div>
-    <div class="desc">
-      <%= post.description_str %>
+    <div>
+      <form action="/comment" method="post">
+        <textarea name="text" id="" cols="80" rows="8"></textarea><br />
+        <input type="text" name="parent" value="<%= post.id %>" hidden>
+        <input type="text" value="item?id=<%=post.id %>" hidden name="goto">
+        <input type="submit" value="add comment">
+      </form>
     </div>
-  </div>
-  <div>
-    <form action="/comment" method="post">
-      <textarea name="text" id="" cols="80" rows="8"></textarea><br />
-      <input type="text" name="parent" value="<%= post.id %>" hidden>
-      <input type="text" value="item?id=<%=post.id %>" hidden name="goto">
-      <input type="submit" value="add comment">
-    </form>
-  </div>
-  <div id="comsec">
-    <%- commentsHtml%>
-  </div>
-  <script src="app.js"></script>
+    <div id="comsec">
+      <%- comment_section.comment_html %>
+    </div>
+    <script src="app.js"></script>

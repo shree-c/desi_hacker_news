@@ -1,43 +1,72 @@
 import db from "../db.js";
 import { get_duration_str } from "./time.js";
 
-const get_comment_for_a_parent = db.prepare(`
-  select * from postsandcomments where parent = ?
-`);
+const db_get_all_comments = db.prepare(`
+with recursive comment_tree as (
+  select id, parent, description_str, username, timestamp, 0 as depth
+  from postsandcomments
+  where parent is null and id = @id
+  union all
+  select t.id, t.parent, t.description_str, t.username, t.timestamp, comment_tree.depth + 1
+  from postsandcomments as t
+  join
+  comment_tree on t.parent = comment_tree.id
+)
+select ct.id, ct.description_str, ct.username, ct.timestamp, ct.depth, ct.parent
+,
+(
+select value from vote where vote.id = ct.id and vote.user = @username 
+) as vote
 
-const get_vote_for_an_item_user = db.prepare(`
-  select value from vote where id = @id and user = @username
+from comment_tree ct order by depth, id
 `)
 
-export function fetch_comments_tree(post_id: string, username: string | undefined): any[] {
-  const comments = get_comment_for_a_parent.all(post_id);
-  comments.forEach((e) => {
-    if (username) {
-      const vote_value = get_vote_for_an_item_user.get({
-        id: e.id,
-        username
-      })
-      if (vote_value) {
-        e.vote = vote_value.value
+export const number_of_comments = db.prepare(`
+with recursive comment_tree as (
+  select id, parent, description_str, username, timestamp, 0 as depth
+  from postsandcomments
+  where parent is null and id = ?
+  union all
+  select t.id, t.parent, t.description_str, t.username, t.timestamp, comment_tree.depth + 1
+  from postsandcomments as t
+  join
+  comment_tree on t.parent = comment_tree.id
+)
+ select count(id) - 1 as count from comment_tree
+`)
+
+
+function make_comment_tree(sql_result_array: any[]): any[] {
+  const temp_hash_map = new Map()
+  const depth_1_array = []
+  for (let i = 1; i < sql_result_array.length; i++) {
+    temp_hash_map.set(sql_result_array[i].id, sql_result_array[i])
+    if (sql_result_array[i].depth === 1) {
+      depth_1_array.push(sql_result_array[i])
+    } else {
+      const parent = temp_hash_map.get(sql_result_array[i].parent)
+      if (parent.children) {
+        parent.children.push(sql_result_array[i])
+      } else {
+        parent.children = [sql_result_array[i]]
       }
     }
-    e.children = fetch_comments_tree(e.id, username);
-  });
-  return comments;
+  }
+  return depth_1_array
 }
 
-export function build_html_form_comment_tree(tree: any[]): string {
+function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean): string {
   let str = "";
   tree.forEach((e) => {
     str += `
     <div class="comment" id=${e.id} >
       <span> 
       <a href="/vote?id=${e.id}&what=${(e.vote === 1) ? 'unup' : 'up'}" 
-      class="clicky ${(e.vote === 1) ? 'upd' : 'up'}">
+      class="${logged_in ? 'clicky' : ''} ${(e.vote === 1) ? 'upd' : 'up'}">
       ${(e.vote === 1) ? '▲' : '△'}
       </a>
       <a href="/vote?id=${e.id}&what=${(e.vote === -1) ? 'undw' : 'dw'}" 
-      class="clicky ${(e.vote === -1) ? 'dwd' : 'dw'}">
+      class="${logged_in ? 'clicky' : ''} ${(e.vote === -1) ? 'dwd' : 'dw'}">
       ${(e.vote === -1) ? '▼' : '▽'}
       </a>
       </span>
@@ -51,7 +80,7 @@ export function build_html_form_comment_tree(tree: any[]): string {
         <a href="/user?id=${e.username}" class="mild">${e.username} </a>
       </div>
       <div class="children">
-        ${build_html_form_comment_tree(e.children)}
+        ${build_html_form_comment_tree(e.children, logged_in)}
       </div>
     </div> 
     `;
@@ -59,4 +88,22 @@ export function build_html_form_comment_tree(tree: any[]): string {
   return str;
 }
 
-// console.log(build_html_form_comment_tree(fetch_comments(602)));
+interface comment_section {
+  comment_html: string,
+  comment_count: number
+}
+
+export function get_comment_section_html_for_a_post(id: number, username: string): comment_section {
+  const comments_flat = db_get_all_comments.all({
+    id,
+    username: username || ''
+  })
+  const comment_html = build_html_form_comment_tree
+    (
+      make_comment_tree(comments_flat), (username) ? true : false
+    )
+  return {
+    comment_count: comments_flat.length,
+    comment_html
+  }
+}

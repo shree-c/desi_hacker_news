@@ -1,6 +1,7 @@
 import db from "../../db.js";
 import Database from "better-sqlite3";
 import * as yup from "yup";
+import { number_of_comments } from '../comment.js';
 
 const insert_single_post = db.prepare(`
 insert into postsandcomments 
@@ -60,6 +61,12 @@ const update_vote = db.prepare(`
 update vote set 
 value = @value, timestamp = @timestamp where id = @id and user = @username
 `)
+
+const get_vote_count = db.prepare(`
+  select sum(value) as vote_count from vote where id = ? group by id
+`)
+
+
 let post_schema = yup.object().shape({
   url: yup.string().url().required(),
   title: yup.string().min(3).required(),
@@ -196,4 +203,18 @@ export function db_manage_vote(
       value: final_vote_value
     })
   }
+}
+
+export function add_comment_and_vote_count(posts: any[], username: string | undefined): any[] {
+  return posts.map((e) => {
+    e.vote_count = get_vote_count.get(e.id)?.vote_count || 0
+    e.comment_count = number_of_comments.get(e.id)?.count || 0
+    if (username) {
+      e.vote = get_vote.get({
+        id: e.id,
+        username
+      })?.value
+    }
+    return e
+  })
 }
