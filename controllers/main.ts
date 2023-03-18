@@ -30,6 +30,8 @@ import { gen_cookie, get_username_from_auth_token } from "../lib/cookie.js";
 import { generatePasswordHash, generateSalt } from "../lib/auth/user.js";
 import controller_events from "../events/obj.js";
 import { add_relative_time, get_duration_str } from "../lib/time.js";
+import { assert } from 'node:console';
+import { make_thread_html } from '../lib/thread.js';
 
 export async function create_post(
   req: Request,
@@ -49,7 +51,7 @@ export async function handle_submit(
   if (!req.username) {
     res.render("login", { message: "You have to be logged in to submit." });
   } else {
-    res.render("submit", { username: req.username });
+    res.render("submit", {});
   }
 }
 
@@ -61,7 +63,6 @@ export async function get_posts(
   const posts = add_comment_and_vote_count(db_get_posts(), req.username);
   res.render("index", {
     posts: add_relative_time(posts),
-    username: req.username,
   });
 }
 
@@ -103,6 +104,9 @@ export async function handle_login(
 export function check_login(req: Request, res: Response, next: NextFunction) {
   if (req.cookies.auth) {
     req.username = get_username_from_auth_token(req.cookies.auth);
+    res.locals.username = req.username
+  } else {
+    res.locals.username = false
   }
   next();
 }
@@ -121,20 +125,17 @@ export function get_user_profile(
   if (!req.query.id) {
     res.render("user", {
       error: "no such user",
-      username: req.username,
     });
   } else {
     const user = db_does_user_exist(req.query.id + "");
     if (!user) {
       res.render("user", {
         error: "no such user",
-        username: req.username,
       });
     } else {
       res.render("user", {
         error: null,
         user,
-        username: req.username,
       });
     }
   }
@@ -156,7 +157,6 @@ export async function get_single_post(
           ...post,
           relative_time: get_duration_str(post.timestamp),
         },
-        username: req.username,
         comment_section: get_comment_section_html_for_a_post(parseInt(id),
           req.username),
       });
@@ -202,5 +202,36 @@ export function handle_vote(req: Request, res: Response, next: NextFunction) {
       db_manage_vote(req.query.id, req.username, votes[req.query.what])
       res.send('ok')
     }
+  }
+}
+
+export function handle_reply_link_click
+  (req: Request, res: Response, next: NextFunction) {
+  if (!req.username) {
+    res.render("login",
+      { message: "You have to be logged in to comment." });
+  } else {
+    if (typeof req.query.id === 'string' && typeof req.query.goto === 'string') {
+      const post = db_get_single_post(req.query.id)
+      const root_post = db_get_single_post(req.query.goto)
+      res.render("reply", {
+        comment: add_relative_time([post])[0],
+        root_id: req.query.goto,
+        short_root_post_title: (root_post.title.length < 50) ? root_post.title : root_post.title.slice(0, 51) + '...'
+      })
+    } else {
+      res.send('bad request')
+    }
+  }
+}
+
+export function handle_threads
+  (req: Request, res: Response, next: NextFunction) {
+  if (typeof req.query.id == 'string') {
+    res.render('threads', {
+      comments_html: make_thread_html(req.query.id)
+    })
+  } else {
+    res.status(400).send('bad request')
   }
 }

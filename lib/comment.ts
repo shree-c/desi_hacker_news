@@ -35,8 +35,7 @@ with recursive comment_tree as (
  select count(id) - 1 as count from comment_tree
 `)
 
-
-function make_comment_tree(sql_result_array: any[]): any[] {
+export function make_tree(sql_result_array: any[]): any[] {
   const temp_hash_map = new Map()
   const depth_1_array = []
   for (let i = 1; i < sql_result_array.length; i++) {
@@ -54,8 +53,8 @@ function make_comment_tree(sql_result_array: any[]): any[] {
   }
   return depth_1_array
 }
-
-function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean): string {
+// make this iterative later
+function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean, post_id: number): string {
   let str = "";
   tree.forEach((e) => {
     str += `
@@ -74,13 +73,16 @@ function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean): str
         ${e.description_str}
       </p>
       <div class="meta">
-        <a href="/item?id=${e.id}" class="mild">${get_duration_str(
-      e.timestamp
-    )} </a>
+        <a href="/item?id=${e.id}" class="mild">
+        ${get_duration_str(e.timestamp)} 
+        </a>
         <a href="/user?id=${e.username}" class="mild">${e.username} </a>
+        <div class="reply mild underline">
+          <a href="/reply?id=${e.id}&goto=${post_id}">reply</a>
+        </div>
       </div>
       <div class="children">
-        ${build_html_form_comment_tree(e.children, logged_in)}
+        ${build_html_form_comment_tree(e.children, logged_in, post_id)}
       </div>
     </div> 
     `;
@@ -100,7 +102,7 @@ export function get_comment_section_html_for_a_post(id: number, username: string
   })
   const comment_html = build_html_form_comment_tree
     (
-      make_comment_tree(comments_flat), (username) ? true : false
+      make_tree(comments_flat), (username) ? true : false, id
     )
   return {
     comment_count: comments_flat.length,

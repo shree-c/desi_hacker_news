@@ -10,6 +10,8 @@ import {
   get_single_post,
   handle_comment,
   handle_vote,
+  handle_reply_link_click,
+  handle_threads
 } from "../controllers/main.js";
 import { async_handler } from "../utils/express.js";
 
@@ -38,5 +40,9 @@ router.get("/item", await async_handler(get_single_post));
 router.post("/comment", await async_handler(handle_comment));
 
 router.get("/vote", await async_handler(handle_vote));
+
+router.get("/reply", await async_handler(handle_reply_link_click))
+
+router.get("/threads", await async_handler(handle_threads))
 
 export default router;

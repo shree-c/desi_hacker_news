@@ -32,8 +32,8 @@ nav .right {
   flex-wrap: wrap;
 }
 
-nav .nav_item {
-  padding: 5px 10px;
+nav .nav_item a {
+  margin: 0 5px;
 }
 
 nav a {
