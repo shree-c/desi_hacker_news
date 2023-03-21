@@ -11,8 +11,13 @@ import {
   handle_comment,
   handle_vote,
   handle_reply_link_click,
-  handle_threads
+  handle_threads,
+  newest
 } from "../controllers/main.js";
+
+import {
+  view_ask, view_comments
+} from '../view_renderers/get_view.js'
 import { async_handler } from "../utils/express.js";
 
 const router = Router();
@@ -44,5 +49,11 @@ router.get("/vote", await async_handler(handle_vote));
 router.get("/reply", await async_handler(handle_reply_link_click))
 
 router.get("/threads", await async_handler(handle_threads))
+
+router.get("/new", await async_handler(newest))
+
+router.get("/ask", await async_handler(view_ask))
+
+router.get("/newcomments", await async_handler(view_comments))
 
 export default router;

@@ -23,8 +23,12 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
+  const start = new Date();
   if (process.env.NODE_ENV === "development") {
     console.log(req.path, req.query);
+    res.on('finish', () => {
+      console.log(`status: ${res.statusCode}, took ${((new Date().getTime()) - start.getTime())}ms`)
+    })
   }
   next();
 });

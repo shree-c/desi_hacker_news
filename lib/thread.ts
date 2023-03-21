@@ -10,7 +10,7 @@ WITH recursive ct as (
     username,
     0 as depth
   from postsandcomments
-  where username = ?
+  where username = @username
     AND parent is not NULL
   union
   select t.id,
@@ -22,6 +22,7 @@ WITH recursive ct as (
   from postsandcomments as t
     join ct on t.parent = ct.id
 )
+-- recursvely go up if contxt 0
 select ct.id,
   ct.description_str,
   ct.timestamp,
@@ -48,7 +49,12 @@ select ct.id,
       where root.parent is NULL
     )
   end as root_id
-from ct order by depth;
+from ct
+;
+`)
+
+const get_title_from_a_post = db.prepare(`
+select title from postsandcomments where id = ?
 `)
 
 
@@ -75,10 +81,12 @@ function make_tree(items: any[]): any[] {
 
 function add_context_link(e: any): string {
   if (e.depth == 0) {
+    const title = get_title_from_a_post.get(e.root_id).title
     return `
     | <a href="/item?id=${e.root_id}">
       context
     </a> 
+  | <a href="/item/id=${e.root_id}">${(title.length > 100) ? title.slice(0, 97) + '...' : title}</a>
     `
   }
   return ''
@@ -88,7 +96,7 @@ function build_thread_html(tree: any[] = []): string {
   let str = ""
   tree.forEach((e) => {
     str += `
-    <div class="comment" id=${e.id} >
+    <div class="item" id=${e.id} >
       <div class="meta mild">
         <a class="" href="/item?id=${e.id}">
           ${get_duration_str(e.timestamp)}
@@ -101,7 +109,6 @@ function build_thread_html(tree: any[] = []): string {
           parent
         </a>
         ${add_context_link(e)}
-
       </div>
       <p class="comtex">
         ${e.description_str}
@@ -115,10 +122,14 @@ function build_thread_html(tree: any[] = []): string {
   return str
 }
 
-export function make_thread_html(username: string): string {
+export function make_thread_html(username: string, limit: number, offset: number): string {
   return build_thread_html(
     make_tree(
-      comments_and_replies_for_an_user.all(username)
+      comments_and_replies_for_an_user.all({
+        username,
+        limit,
+        offset
+      })
     )
   )
 }

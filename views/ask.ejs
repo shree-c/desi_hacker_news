@@ -1,0 +1,47 @@
+<%- include("includes/header.ejs") %>
+  <div class="posts">
+    <% asks.forEach(((ask,i)=> { %>
+      <div class="item">
+        <p class="title">
+          <%= i + 1 + ((next_page_number - 2) * 60) %>
+            <span>
+              <a href="/vote?id=<%=ask.id %>&what=<%= (ask.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
+                <%= (ask.vote === 1) ? 'upd' : 'up' %>">
+                <%= (ask.vote===1) ? '▲' : '△' %>
+              </a>
+              <a href="/vote?id=<%=ask.id%>&what=<%=(ask.vote === -1) ? 'undw' : 'dw'%>" class="<%= username ? 'clicky' : '' %> 
+                <%= (ask.vote === -1) ? 'dwd' : 'dw' %>">
+                <%= (ask.vote===-1) ? '▼' : '▽' %>
+              </a>
+            </span>
+            <a href="<%= ask.url_str%>">
+              <%= ask.title%>
+            </a>
+            <span class="url">
+              <a href="/from?id=<%=ask.url_str%>" class="mild underline">
+                <%= (ask.url_str)? `(${ask.url_str})` : '' %>
+              </a>
+            </span>
+        </p>
+        <div class="sub_ask>
+          <span class=" mild small">
+          <%= ask.vote_count %> points
+            </span>
+            <a class="username mild" href="/user?id=<%= ask.username %>">
+              <%= ask.username %>
+            </a>
+            <a href="/item?id=<%= ask.id %>" class="time mild">
+              <%=ask.relative_time %>
+            </a>
+            <a href="/item?id=<%= ask.id %>" class="time mild">
+              <%=ask.comment_count %> comments
+            </a>
+        </div>
+      </div>
+      <%})) %>
+  </div>
+  <div class="more"><a href="<%= path %>?p=<%= next_page_number %>">More</a></div>
+  <script src="app.js"></script>
+  </body>
+
+  </html>

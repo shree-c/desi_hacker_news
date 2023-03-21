@@ -9,8 +9,12 @@ insert into postsandcomments
 values(@url, @title, @description, @username, @timestamp)
 `);
 
-const get_all_posts = db.prepare(`
-select * from postsandcomments where parent ISNULL
+const get_main_posts = db.prepare(`
+select * from postsandcomments where parent is null
+and title NOT like 'Ask HN:%'
+and title NOT like 'Show HN:%'
+ORDER BY timestamp desc
+LIMIT @limit OFFSET @offset
 `);
 
 const insert_user = db.prepare(`
@@ -66,11 +70,62 @@ const get_vote_count = db.prepare(`
   select sum(value) as vote_count from vote where id = ? group by id
 `)
 
+export const get_newest_posts = db.prepare(`
+select * from postsandcomments where parent is null
+order by timestamp desc
+limit @limit offset @offset
+`)
+
+export const get_comments = db.prepare(`
+select * from postsandcomments where parent is not null
+order by timestamp desc
+limit @limit offset @offset
+`)
+
+export const db_get_ask_posts = db.prepare(`
+select * from postsandcomments where parent is null and title like 'Ask HN:%'
+order by timestamp desc
+limit @limit offset @offset
+`)
+
+export const db_get_recent_comments = db.prepare(`
+select ct.id,
+  ct.description_str,
+  ct.timestamp,
+  ct.username,
+  ct.parent,
+      (WITH RECURSIVE root as (
+        SELECT id,
+          parent,
+          title
+        from postsandcomments
+        where id = ct.id
+        UNION
+        SELECT p.id,
+          p.parent,
+          p.title
+        from postsandcomments as p
+          join root on root.parent = p.id
+      )
+      select id
+      from root
+      where root.parent is NULL
+    )
+  as root_id
+from postsandcomments as ct
+where ct.parent is not null
+order by timestamp desc
+limit @limit offset @offset
+`)
+
+export const db_get_titles = db.prepare(`
+select title, id from postsandcomments where id in (@ids_string)
+`)
 
 let post_schema = yup.object().shape({
-  url: yup.string().url().required(),
+  url: yup.string().url(),
   title: yup.string().min(3).required(),
-  description: yup.string().min(3).required(),
+  description: yup.string(),
   username: yup.string().min(2).max(20).required(),
 });
 
@@ -84,8 +139,11 @@ export async function db_add_post(
   }
 }
 
-export function db_get_posts(): any {
-  return get_all_posts.all();
+export function db_get_main_posts(offset: number, limit = 60): any {
+  return get_main_posts.all({
+    offset,
+    limit
+  });
 }
 
 export function db_does_user_exist(un: string): any {
@@ -194,7 +252,6 @@ export function db_manage_vote(
         username
       })
       return
-
     }
     update_vote.run({
       id,

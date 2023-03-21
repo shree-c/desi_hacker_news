@@ -1,9 +1,9 @@
-<%- include('includes/header.ejs') %>
-  <div class="posts">
+<%- include("includes/header.ejs") %>
+  <div class="items">
     <% posts.forEach(((post,i)=> { %>
       <div class="item">
         <p class="title">
-          <%= i + 1 + ((next_page_number - 2) * offset) %>
+          <%= i + 1 + ((next_page_number - 2) * 60) %>
             <span>
               <a href="/vote?id=<%=post.id %>&what=<%= (post.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
                 <%= (post.vote === 1) ? 'upd' : 'up' %>">
@@ -14,7 +14,7 @@
                 <%= (post.vote===-1) ? '▼' : '▽' %>
               </a>
             </span>
-            <a href="<%= post.url_str%>" class="title">
+            <a href="<%= post.url_str%>">
               <%= post.title%>
             </a>
             <span class="url">
@@ -25,8 +25,7 @@
         </p>
         <div class="sub_post">
           <span class="mild small">
-            <%= post.vote_count %>
-              <%= (post.vote_count==1) ? 'point' : 'points' %>
+            <%= post.vote_count %> points
           </span>
           <a class="username mild" href="/user?id=<%= post.username %>">
             <%= post.username %>
@@ -35,14 +34,13 @@
             <%=post.relative_time %>
           </a>
           <a href="/item?id=<%= post.id %>" class="time mild">
-            <%= (post.comment_count> 0) ? post.comment_count : 'discuss' %>
-              <%= (post.comment_count> 0) ? (post.comment_count == 1) ? 'comment' : 'comments' : '' %>
+            <%=post.comment_count %> comments
           </a>
         </div>
       </div>
       <%})) %>
   </div>
-  <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
+  <div class="more"><a href="/?p=<%= next_page_number %>">More</a></div>
   <script src="app.js"></script>
   </body>
 

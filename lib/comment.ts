@@ -1,7 +1,7 @@
 import db from "../db.js";
 import { get_duration_str } from "./time.js";
 
-const db_get_all_comments = db.prepare(`
+const db_get_all_comments_for_a_post = db.prepare(`
 with recursive comment_tree as (
   select id, parent, description_str, username, timestamp, 0 as depth
   from postsandcomments
@@ -58,7 +58,7 @@ function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean, post
   let str = "";
   tree.forEach((e) => {
     str += `
-    <div class="comment" id=${e.id} >
+    <div class="item" id=${e.id} >
       <span> 
       <a href="/vote?id=${e.id}&what=${(e.vote === 1) ? 'unup' : 'up'}" 
       class="${logged_in ? 'clicky' : ''} ${(e.vote === 1) ? 'upd' : 'up'}">
@@ -96,7 +96,7 @@ interface comment_section {
 }
 
 export function get_comment_section_html_for_a_post(id: number, username: string): comment_section {
-  const comments_flat = db_get_all_comments.all({
+  const comments_flat = db_get_all_comments_for_a_post.all({
     id,
     username: username || ''
   })

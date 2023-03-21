@@ -14,24 +14,20 @@
     <nav>
       <div class="left">
         <div class="nav_item"><a href="/" id="nav_logo">Desi Hacker News</a></div>
-
         <% if (username) { %>
           <div class="nav_item"><a href="/threads?id=<%=username %>">threads</a>|</div>
-          <div class="nav_item"><a href="#">past</a>|</div>
-          <div class="nav_item"><a href="#">comments</a>|</div>
-          <div class="nav_item"><a href="#">ask</a>|</div>
-          <div class="nav_item"><a href="#">show</a>|</div>
-          <div class="nav_item"><a href="#">jobs</a>|</div>
-          <div class="nav_item"><a href="#">new</a>|</div>
           <% } %>
-
+            <div class="nav_item"><a href="#">past</a>|</div>
+            <div class="nav_item"><a href="/newcomments">comments</a>|</div>
+            <div class="nav_item"><a href="/ask">ask</a>|</div>
+            <div class="nav_item"><a href="#">show</a>|</div>
+            <div class="nav_item"><a href="/new">new</a>|</div>
             <div class="nav_item"><a href="/submit">Submit</a></div>
       </div>
       <div class="right">
         <% if (username) { %>
           <div class="nav_item"><a href=<%=`/user?id=${username}`%>><%= username %></a></div>
           <div class="nav_item"><a href="/logout">logout</a></div>
-
           <% } else {%>
             <div class="nav_item"><a href="/login">login</a></div>
             <%}%>

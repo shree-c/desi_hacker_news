@@ -5,19 +5,24 @@ declare global {
     }
   }
 }
+
 import {
   get_comment_section_html_for_a_post
 } from "../lib/comment.js";
+
 import { Request, Response, NextFunction } from "express";
 import {
   db_add_post,
-  db_get_posts,
+  db_get_main_posts,
   db_create_record,
   db_does_user_exist,
   db_get_single_post,
   db_add_comment,
   db_manage_vote,
-  add_comment_and_vote_count
+  add_comment_and_vote_count,
+  get_newest_posts,
+  db_get_ask_posts,
+  db_get_recent_comments,
 } from "../lib/sql_functions/transactions.js";
 import {
   check_username_should_not_exist,
@@ -30,8 +35,9 @@ import { gen_cookie, get_username_from_auth_token } from "../lib/cookie.js";
 import { generatePasswordHash, generateSalt } from "../lib/auth/user.js";
 import controller_events from "../events/obj.js";
 import { add_relative_time, get_duration_str } from "../lib/time.js";
-import { assert } from 'node:console';
 import { make_thread_html } from '../lib/thread.js';
+import db from '../db.js';
+import { title } from 'process';
 
 export async function create_post(
   req: Request,
@@ -60,9 +66,16 @@ export async function get_posts(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const posts = add_comment_and_vote_count(db_get_posts(), req.username);
+  const page_number = (req.query.p && typeof req.query.p === 'string')
+    ? parseInt(req.query.p)
+    : 1;
+  const total_offset = (page_number - 1) * 60;
+  const posts = add_comment_and_vote_count(db_get_main_posts(total_offset), req.username);
   res.render("index", {
     posts: add_relative_time(posts),
+    next_page_number: page_number + 1,
+    path: req.path,
+    offset: 60
   });
 }
 
@@ -228,10 +241,65 @@ export function handle_reply_link_click
 export function handle_threads
   (req: Request, res: Response, next: NextFunction) {
   if (typeof req.query.id == 'string') {
+    const page_number = (req.query.p && typeof req.query.p === 'string')
+      ? parseInt(req.query.p)
+      : 1;
+    const offset = (page_number - 1) * 60;
     res.render('threads', {
-      comments_html: make_thread_html(req.query.id)
+      comments_html: make_thread_html(req.query.id, 30, offset)
     })
   } else {
     res.status(400).send('bad request')
   }
+}
+
+export function newest
+  (req: Request, res: Response, next: NextFunction) {
+  const page_number = (req.query.p && typeof req.query.p === 'string')
+    ? parseInt(req.query.p)
+    : 1;
+  const total_offset = (page_number - 1) * 15;
+  const newest_posts = get_newest_posts.all({
+    limit: 15,
+    offset: total_offset
+  })
+  const posts = add_comment_and_vote_count(newest_posts, req.username);
+  res.render("index", {
+    posts: add_relative_time(add_comment_and_vote_count(posts, req.username)),
+    next_page_number: page_number + 1,
+    path: req.path,
+    offset: 15
+  });
+}
+
+export function control_ask(username: string, limit: number, offset: number): any[] {
+  return add_comment_and_vote_count(
+    db_get_ask_posts.all({
+      limit,
+      offset
+    }), username)
+}
+
+export function control_recent_comments(limit: number, offset: number) {
+  const comments = db_get_recent_comments.all({
+    limit, offset
+  })
+  const ids_string = comments.reduce((pv, cv, i, arr) => {
+    pv += cv.root_id + ((arr.length - 1 != i) ? ', ' : '')
+    return pv
+  }, '')
+  const db_get_titles = db.prepare(`
+select title, id from postsandcomments where id in (${ids_string})
+  `)
+  const titles = db_get_titles.all();
+  const title_entries = {};
+  titles.forEach((x) => {
+    return title_entries[x.id.toString()] = x.title
+  })
+  const comments_with_added_context_and_relative_time = comments.map((e) => {
+    e.context_title = title_entries[e.root_id.toString()]
+    e.relative_time = get_duration_str(e.timestamp)
+    return e
+  })
+  return comments_with_added_context_and_relative_time;
 }

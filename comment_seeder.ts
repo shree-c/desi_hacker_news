@@ -6,9 +6,6 @@ function getRandomFromArr(arr: any[]): any {
   assert(arr.length > 0);
   return arr[Math.floor(Math.random() * arr.length)];
 }
-// `insert into users (username, password, email, timestamp)
-//  values(@username, @password, @email, @timestamp)
-// `;
 const insert_post = db.prepare(`
 insert into postsandcomments (url_str, title, description_str, username, timestamp)
 values(@url, @title, @description, @username, @timestamp)
@@ -24,26 +21,25 @@ values(@text, @parent, @username, @timestamp)
 `);
 
 const get_all_usernames = db.prepare(`
-select username from users
+select username, timestamp from users
 `);
 
 const usernames = get_all_usernames.all();
 
-// console.log("adding posts");
-// // added posts
-// for (let i = 0; i < 200; i++) {
-//   const user = getRandomFromArr(usernames);
-//   insert_post.run({
-//     url: faker.internet.url(),
-//     title: faker.company.bs(),
-//     username: user.username,
-//     description: faker.random.words(20),
-//     timestamp: faker.date
-//       .between(parseInt(user.timestamp), new Date())
-//       .getTime(),
-//   });
-// }
-
+console.log("adding posts");
+// added posts
+for (let i = 0; i < 200; i++) {
+  const user = getRandomFromArr(usernames);
+  insert_post.run({
+    url: faker.internet.url(),
+    title: faker.company.bs(),
+    username: user.username,
+    description: faker.random.words(20),
+    timestamp: faker.date
+      .between(parseInt(user.timestamp), new Date())
+      .getTime(),
+  });
+}
 // adding comments to those posts
 
 let posts = get_all_entries_from_postsandcomments.all();
