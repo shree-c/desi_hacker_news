@@ -1,5 +1,6 @@
-<%- include('includes/header.ejs') %>
-
-  <%- comments_html %>
-
-    </html>
+<%- include('includes/html_top.ejs') %>
+  <div id="outermost">
+    <%- include('includes/header.ejs') %>
+      <%- comments_html %>
+        <script src="app.js"></script>
+        <%- include("includes/footer.ejs") %>

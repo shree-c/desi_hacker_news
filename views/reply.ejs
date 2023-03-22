@@ -1,39 +1,38 @@
-<%- include('includes/header.ejs') %>
-  <div class="item">
-    <div class="sub">
-      <a class="username mild" href="/user?id=<%= comment.username %>">
-        <%= comment.username %>
-      </a>
-      <a class="mild" href="/item?id=<%= comment.id %>" class="time mild">
-        <%=comment.relative_time %> |
-      </a>
-      <a class="mild" href="/item?id=<%= comment.parent %>">
-        parent |
-      </a>
-      <a class="mild" href="/item?id=<%= root_id %> #<%=comment.id%>">
-        context |
-      </a>
-      <a class="mild" href="/item?id=<%= root_id %>">
-        on: <%= short_root_post_title %>
-      </a>
-    </div>
-    <br>
-    <div class="comment_text">
-      <%= comment.description_str %>
-    </div>
-  </div>
-  <br>
-  <div class="reply_form">
-    <form action="/comment" method="post">
-      <textarea name="text" cols="30" rows="10"></textarea>
-      <input type="hidden" name="parent" value="<%= comment.id %>">
-      <input type="text" name="goto" value="item?id=<%=root_id%>#<%= comment.id %>" hidden>
+<%- include('includes/html_top.ejs') %>
+  <div id="outermost">
+    <%- include('includes/header.ejs') %>
+      <div class="item">
+        <div class="sub">
+          <a class="username mild" href="/user?id=<%= comment.username %>">
+            <%= comment.username %>
+          </a>
+          <a class="mild" href="/item?id=<%= comment.id %>" class="time mild">
+            <%=comment.relative_time %> |
+          </a>
+          <a class="mild" href="/item?id=<%= comment.parent %>">
+            parent |
+          </a>
+          <a class="mild" href="/item?id=<%= root_id %> #<%=comment.id%>">
+            context |
+          </a>
+          <a class="mild" href="/item?id=<%= root_id %>">
+            on: <%= short_root_post_title %>
+          </a>
+        </div>
+        <br>
+        <div class="comment_text">
+          <%= comment.description_str %>
+        </div>
+      </div>
       <br>
-      <br>
-      <input type="submit" value="reply">
-    </form>
-  </div>
-
-  </body>
-
-  </html>
+      <div class="reply_form">
+        <form action="/comment" method="post">
+          <textarea name="text" cols="30" rows="10"></textarea>
+          <input type="hidden" name="parent" value="<%= comment.id %>">
+          <input type="text" name="goto" value="item?id=<%=root_id%>#<%= comment.id %>" hidden>
+          <br>
+          <br>
+          <input type="submit" value="reply">
+        </form>
+      </div>
+      <%- include("includes/footer.ejs") %>

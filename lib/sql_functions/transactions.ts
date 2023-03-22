@@ -11,8 +11,8 @@ values(@url, @title, @description, @username, @timestamp)
 
 const get_main_posts = db.prepare(`
 select * from postsandcomments where parent is null
-and title NOT like 'Ask HN:%'
-and title NOT like 'Show HN:%'
+and title NOT like 'Ask DN:%'
+and title NOT like 'Show DN:%'
 ORDER BY timestamp desc
 LIMIT @limit OFFSET @offset
 `);
@@ -83,7 +83,13 @@ limit @limit offset @offset
 `)
 
 export const db_get_ask_posts = db.prepare(`
-select * from postsandcomments where parent is null and title like 'Ask HN:%'
+select * from postsandcomments where parent is null and title like 'Ask DN:%'
+order by timestamp desc
+limit @limit offset @offset
+`)
+
+export const db_get_show_posts = db.prepare(`
+select * from postsandcomments where parent is null and title like 'Show DN:%'
 order by timestamp desc
 limit @limit offset @offset
 `)

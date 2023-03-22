@@ -23,6 +23,7 @@ import {
   get_newest_posts,
   db_get_ask_posts,
   db_get_recent_comments,
+  db_get_show_posts
 } from "../lib/sql_functions/transactions.js";
 import {
   check_username_should_not_exist,
@@ -72,7 +73,7 @@ export async function get_posts(
   const total_offset = (page_number - 1) * 60;
   const posts = add_comment_and_vote_count(db_get_main_posts(total_offset), req.username);
   res.render("index", {
-    posts: add_relative_time(posts),
+    items: add_relative_time(posts),
     next_page_number: page_number + 1,
     path: req.path,
     offset: 60
@@ -121,6 +122,7 @@ export function check_login(req: Request, res: Response, next: NextFunction) {
   } else {
     res.locals.username = false
   }
+  res.locals.title = ''
   next();
 }
 
@@ -265,7 +267,7 @@ export function newest
   })
   const posts = add_comment_and_vote_count(newest_posts, req.username);
   res.render("index", {
-    posts: add_relative_time(add_comment_and_vote_count(posts, req.username)),
+    items: add_relative_time(add_comment_and_vote_count(posts, req.username)),
     next_page_number: page_number + 1,
     path: req.path,
     offset: 15
@@ -275,6 +277,14 @@ export function newest
 export function control_ask(username: string, limit: number, offset: number): any[] {
   return add_comment_and_vote_count(
     db_get_ask_posts.all({
+      limit,
+      offset
+    }), username)
+}
+
+export function control_show(username: string, limit: number, offset: number): any[] {
+  return add_comment_and_vote_count(
+    db_get_show_posts.all({
       limit,
       offset
     }), username)

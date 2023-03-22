@@ -1,26 +1,27 @@
-<%- include('includes/header.ejs') %>
-
-  <% if (error) { %>
-    <div class="error">
-      No such user
-    </div>
-    <% } else { %>
-      <div class="container">
-        <table>
-          <tbody>
-            <tr>
-              <td>user:</td>
-              <td>
-                <%= user.username %>
-              </td>
-            </tr>
-            <tr>
-              <td>created: </td>
-              <td>
-                <%= new Date(user.timestamp).toLocaleString() %>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <%} %>
+<%- include('includes/html_top.ejs') %>
+  <div id="outermost">
+    <%- include('includes/header.ejs') %>
+      <% if (error) { %>
+        <div class="error">
+          No such user
+        </div>
+        <% } else { %>
+          <div class="container">
+            <table>
+              <tbody>
+                <tr>
+                  <td>user:</td>
+                  <td>
+                    <%= user.username %>
+                  </td>
+                </tr>
+                <tr>
+                  <td>created: </td>
+                  <td>
+                    <%= new Date(user.timestamp).toLocaleString() %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <%} %>

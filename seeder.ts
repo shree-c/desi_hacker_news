@@ -47,11 +47,3 @@ const obj = {
   posts,
   users
 }
-
-// fs.writeFile('seeded.json', JSON.stringify(obj), {
-//   encoding: 'utf-8'
-// }, (err) => {
-//   if (err)
-//     throw err
-//   console.log('written to json')
-// })

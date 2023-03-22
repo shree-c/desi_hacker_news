@@ -1,49 +1,7 @@
-<%- include('includes/header.ejs') %>
-  <div class="posts">
-    <% posts.forEach(((post,i)=> { %>
-      <div class="item">
-        <p class="title">
-          <%= i + 1 + ((next_page_number - 2) * offset) %>
-            <span>
-              <a href="/vote?id=<%=post.id %>&what=<%= (post.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
-                <%= (post.vote === 1) ? 'upd' : 'up' %>">
-                <%= (post.vote===1) ? '▲' : '△' %>
-              </a>
-              <a href="/vote?id=<%=post.id%>&what=<%=(post.vote === -1) ? 'undw' : 'dw'%>" class="<%= username ? 'clicky' : '' %> 
-                <%= (post.vote === -1) ? 'dwd' : 'dw' %>">
-                <%= (post.vote===-1) ? '▼' : '▽' %>
-              </a>
-            </span>
-            <a href="<%= post.url_str%>" class="title">
-              <%= post.title%>
-            </a>
-            <span class="url">
-              <a href="/from?id=<%=post.url_str%>" class="mild underline">
-                (<%=post.url_str%>)
-              </a>
-            </span>
-        </p>
-        <div class="sub_post">
-          <span class="mild small">
-            <%= post.vote_count %>
-              <%= (post.vote_count==1) ? 'point' : 'points' %>
-          </span>
-          <a class="username mild" href="/user?id=<%= post.username %>">
-            <%= post.username %>
-          </a>
-          <a href="/item?id=<%= post.id %>" class="time mild">
-            <%=post.relative_time %>
-          </a>
-          <a href="/item?id=<%= post.id %>" class="time mild">
-            <%= (post.comment_count> 0) ? post.comment_count : 'discuss' %>
-              <%= (post.comment_count> 0) ? (post.comment_count == 1) ? 'comment' : 'comments' : '' %>
-          </a>
-        </div>
-      </div>
-      <%})) %>
-  </div>
-  <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
-  <script src="app.js"></script>
-  </body>
-
-  </html>
+<%- include('includes/html_top.ejs') %>
+  <div id="outermost">
+    <%- include('includes/header.ejs') %>
+      <%- include('includes/items.ejs') %>
+        <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
+        <script src="app.js"></script>
+        <%- include("includes/footer.ejs") %>

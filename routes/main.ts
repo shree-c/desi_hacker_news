@@ -16,7 +16,7 @@ import {
 } from "../controllers/main.js";
 
 import {
-  view_ask, view_comments
+  view_ask, view_comments, view_show
 } from '../view_renderers/get_view.js'
 import { async_handler } from "../utils/express.js";
 
@@ -53,6 +53,8 @@ router.get("/threads", await async_handler(handle_threads))
 router.get("/new", await async_handler(newest))
 
 router.get("/ask", await async_handler(view_ask))
+
+router.get("/show", await async_handler(view_show))
 
 router.get("/newcomments", await async_handler(view_comments))
 

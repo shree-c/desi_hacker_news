@@ -1,29 +1,31 @@
-<%- include('includes/header.ejs') %>
+<%- include('includes/html_top.ejs') %>
+  <div id="outermost">
+    <%- include('includes/header.ejs') %>
+      <% comments.forEach((e, i)=> { %>
+        <div class="item" id=<%=e.id %>>
+          <div class="meta mild">
+            <a class="" href="/item?id=<%= e.id %>">
+              <%= e.relative_time %>
+            </a>
+            by
+            <a class="mild" href="/user?id=<%= e.username %>">
+              <%= e.username %>
+            </a> |
+            <a class="" href="/item?id=<%= e.parent %>">
+              parent
+            </a>
+            | <a href="/item?id=<%= e.root_id%>">
+              context
+            </a>
+            | <a href="/item/?id=<%= e.root_id %>">
+              <%= (e.context_title.length> 100) ? e.context_title.slice(0, 97) + '...' : e.context_title %>
+            </a>
 
-  <% comments.forEach((e, i)=> { %>
-    <div class="item" id=<%=e.id %>>
-      <div class="meta mild">
-        <a class="" href="/item?id=<%= e.id %>">
-          <%= e.relative_time %>
-        </a>
-        by
-        <a class="mild" href="/user?id=<%= e.username %>">
-          <%= e.username %>
-        </a> |
-        <a class="" href="/item?id=<%= e.parent %>">
-          parent
-        </a>
-        | <a href="/item?id=<%= e.root_id%>">
-          context
-        </a>
-        | <a href="/item/?id=<%= e.root_id %>">
-          <%= (e.context_title.length> 100) ? e.context_title.slice(0, 97) + '...' : e.context_title %>
-        </a>
-
-      </div>
-      <p class="comtex">
-        <%= e.description_str %>
-      </p>
-    </div>
-    <% }) %>
-      <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
+          </div>
+          <p class="comtex">
+            <%= e.description_str %>
+          </p>
+        </div>
+        <% }) %>
+          <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
+          <%- include("includes/footer.ejs") %>

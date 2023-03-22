@@ -35,6 +35,12 @@ app.use((req, res, next) => {
 
 app.use("/", main_router);
 
+app.use((req, res, next) => {
+  res.status(404).render('404', {
+    title: 'Desi Hacker News | NOT FOUND'
+  })
+})
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.send(error_map[err.message] || "internal server error");
