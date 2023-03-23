@@ -11,6 +11,7 @@ import {
 } from "../lib/comment.js";
 
 import { Request, Response, NextFunction } from "express";
+
 import {
   db_add_post,
   db_get_main_posts,
@@ -23,7 +24,8 @@ import {
   get_newest_posts,
   db_get_ask_posts,
   db_get_recent_comments,
-  db_get_show_posts
+  db_get_show_posts,
+  db_get_posts_of_a_day
 } from "../lib/sql_functions/transactions.js";
 import {
   check_username_should_not_exist,
@@ -35,11 +37,10 @@ import {
 import { gen_cookie, get_username_from_auth_token } from "../lib/cookie.js";
 import { generatePasswordHash, generateSalt } from "../lib/auth/user.js";
 import controller_events from "../events/obj.js";
-import { add_relative_time, get_duration_str } from "../lib/time.js";
+import { add_relative_time, get_duration_str, set_to_start_of_utc_day } from "../lib/time.js";
 import { make_thread_html } from '../lib/thread.js';
 import db from '../db.js';
-import { title } from 'process';
-
+import { strict as assert } from 'node:assert';
 export async function create_post(
   req: Request,
   res: Response,
@@ -312,4 +313,38 @@ select title, id from postsandcomments where id in (${ids_string})
     return e
   })
   return comments_with_added_context_and_relative_time;
+}
+
+export function control_front(username: string, limit: number, offset: number, date: string):any[] {
+  let final_date_obj: Date | null = null
+  if (date === '') {
+    final_date_obj = new Date()
+    final_date_obj.setDate(final_date_obj.getDate() - 1)
+    // set to previous day start
+    final_date_obj = set_to_start_of_utc_day(final_date_obj)
+  } else {
+    //
+    if (!date.match(/\d\d\d\d-\d\d-\d\d/)) {
+      throw new Error('Invalid day.');
+    }
+    const date_strings = date.split('-');
+    final_date_obj = new Date(Date.UTC(+date_strings[0], +date_strings[1] - 1, +date_strings[2], 0, 0, 0))
+    if (final_date_obj > new Date()) {
+      throw new Error('No time travelling')
+    }
+  }
+  const start = final_date_obj.getTime()
+  // forwarding 24 hours
+  const end = start + (60 * 60 * 24 * 1000)
+  const posts = (db_get_posts_of_a_day.all({
+    start,
+    end,
+    username,
+    limit,
+    offset
+  }))
+  posts.forEach((e) => {
+    assert(+e.timestamp <= end && +e.timestamp >= start)
+  })
+  return [add_relative_time(posts), final_date_obj]
 }

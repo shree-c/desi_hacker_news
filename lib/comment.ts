@@ -23,11 +23,11 @@ from comment_tree ct order by depth, id
 
 export const number_of_comments = db.prepare(`
 with recursive comment_tree as (
-  select id, parent, description_str, username, timestamp, 0 as depth
+  select id
   from postsandcomments
   where parent is null and id = ?
   union all
-  select t.id, t.parent, t.description_str, t.username, t.timestamp, comment_tree.depth + 1
+  select t.id
   from postsandcomments as t
   join
   comment_tree on t.parent = comment_tree.id

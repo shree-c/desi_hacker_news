@@ -1,0 +1,19 @@
+<%- include('includes/html_top.ejs') %>
+<div id="outermost">
+  <%- include('includes/header.ejs') %>
+  <div id="front">
+    <p>Stories from <%= title_date %> </p>
+    <p>
+    Go back a 
+    <a href="/front?day=<%=go_back.day%>">day</a>, 
+    <a href="/front?day=<%= go_back.month %>">month</a>,
+    or 
+    <a href="/front?day=<%= go_back.year %>">year</a>.
+    <%- (go_forward.day) ? `Go froward a <a href="/front?day=${go_forward.day}">day</a>` : '' %>
+    <%- (go_forward.month) ? `,<a href="/front?day=${go_forward.month}">month</a>` : '' %>
+    <%- (go_forward.year) ? `,or a<a href="/front?day=${go_forward.year}">year</a>` : '' %>
+    </p>
+    <%- include('includes/items.ejs') %>
+    <div class="more"><a href="<% path %>?p=<%= next_page_number %>">More</a></div>
+    <script src="app.js"></script>
+    <%- include("includes/footer.ejs") %>

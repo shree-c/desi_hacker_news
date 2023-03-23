@@ -12,11 +12,11 @@ import {
   handle_vote,
   handle_reply_link_click,
   handle_threads,
-  newest
+  newest,
 } from "../controllers/main.js";
 
 import {
-  view_ask, view_comments, view_show
+  view_ask, view_comments, view_show, view_front
 } from '../view_renderers/get_view.js'
 import { async_handler } from "../utils/express.js";
 
@@ -57,5 +57,7 @@ router.get("/ask", await async_handler(view_ask))
 router.get("/show", await async_handler(view_show))
 
 router.get("/newcomments", await async_handler(view_comments))
+
+router.get("/front", await async_handler(view_front))
 
 export default router;

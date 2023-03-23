@@ -67,7 +67,7 @@ value = @value, timestamp = @timestamp where id = @id and user = @username
 `)
 
 const get_vote_count = db.prepare(`
-  select sum(value) as vote_count from vote where id = ? group by id
+select sum(value) as vote_count from vote where id = ? group by id
 `)
 
 export const get_newest_posts = db.prepare(`
@@ -126,6 +126,27 @@ limit @limit offset @offset
 
 export const db_get_titles = db.prepare(`
 select title, id from postsandcomments where id in (@ids_string)
+`)
+
+export const db_get_posts_of_a_day = db.prepare(`
+select *, t.id, 
+(select sum(value) from vote where id = t.id group by id) as vote_count, 
+(with recursive comment_tree as (
+  select id
+  from postsandcomments
+  where id = t.id
+  union all
+  select t.id
+  from postsandcomments as t
+  join
+  comment_tree on t.parent = comment_tree.id
+) select count(id) - 1  from comment_tree) as comment_count,
+(select value from vote where id = t.id and username = @username) as vote
+from postsandcomments as t where t.parent is NULL
+and 
+(cast(timestamp as decimal) >= @start and cast(timestamp as decimal) <= @end)
+order by (comment_count + vote_count) desc
+limit @limit offset @offset
 `)
 
 let post_schema = yup.object().shape({

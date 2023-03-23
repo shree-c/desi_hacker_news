@@ -1,39 +1,41 @@
 <% items.forEach(((item,i)=> { %>
-  <div class="item">
-    <div class="title">
-      <%= i + 1 + ((next_page_number - 2) * 60) %>
-        <span>
-          <a href="/vote?id=<%=item.id %>&what=<%= (item.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
+<div class="item">
+  <div class="title">
+    <%= i + 1 + ((next_page_number - 2) * 60) %>
+    <span>
+      <a href="/vote?id=<%=item.id %>&what=<%= (item.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
                 <%= (item.vote === 1) ? 'upd' : 'up' %>">
-            <%= (item.vote===1) ? '▲' : '△' %>
-          </a>
-          <a href="/vote?id=<%=item.id%>&what=<%=(item.vote === -1) ? 'undw' : 'dw'%>" class="<%= username ? 'clicky' : '' %> 
+        <%= (item.vote===1) ? '▲' : '△' %>
+      </a>
+      <a href="/vote?id=<%=item.id%>&what=<%=(item.vote === -1) ? 'undw' : 'dw'%>" class="<%= username ? 'clicky' : '' %> 
                 <%= (item.vote === -1) ? 'dwd' : 'dw' %>">
-            <%= (item.vote===-1) ? '▼' : '▽' %>
-          </a>
-        </span>
-        <a href="<%= item.url_str%>">
-          <%= item.title%>
-        </a>
-        <span class="url">
-          <a href="/from?id=<%=item.url_str%>" class="mild underline">
-            <%= (item.url_str)? `(${item.url_str})` : '' %>
-          </a>
-        </span>
-    </div>
-    <div class="sub_ask>
-          <span class=" mild small">
-      <%= item.vote_count %> points
-        </span>
-        <a class="username mild" href="/user?id=<%= item.username %>">
-          <%= item.username %>
-        </a>
-        <a href="/item?id=<%= item.id %>" class="time mild">
-          <%=item.relative_time %>
-        </a>
-        <a href="/item?id=<%= item.id %>" class="time mild">
-          <%=item.comment_count %> comments
-        </a>
-    </div>
+        <%= (item.vote===-1) ? '▼' : '▽' %>
+      </a>
+    </span>
+    <a href="<%= item.url_str%>">
+      <%= item.title%>
+    </a>
+    <span class="url">
+      <a href="/from?id=<%=item.url_str%>" class="mild underline">
+        <%= (item.url_str)? `(${item.url_str})` : '' %>
+      </a>
+    </span>
   </div>
-  <% })) %>
+  <div class="sub_ask>
+          <span class=" mild small">
+    <%= (item.vote_count) ? (item.vote_count) : 0 %>
+    <%= (item.vote_count == 1) ? 'point' : 'points' %>
+    </span>
+    <a class="username mild" href="/user?id=<%= item.username %>">
+      <%= item.username %>
+    </a>
+    <a href="/item?id=<%= item.id %>" class="time mild">
+      <%=item.relative_time %>
+    </a>
+    <a href="/item?id=<%= item.id %>" class="time mild">
+      <%=(item.comment_count) ? `${item.comment_count}` : 'discuss'%>
+      <%= (item.comment_count == 1) ? 'comment' : (item.comment_count > 1) ? 'comments' : '' %>
+    </a>
+  </div>
+</div>
+<% })) %>

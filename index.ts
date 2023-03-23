@@ -43,6 +43,6 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.send(error_map[err.message] || "internal server error");
+  res.send(err.message || error_map[err.message] || "internal server error");
 });
 app.listen(PORT, () => console.log(`listining at ${PORT}`));
