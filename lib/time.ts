@@ -24,7 +24,7 @@ export function get_duration_str(timestamp: string | number): string {
     hours_diff = (hours_diff < 0) ? hours_diff + 23 : hours_diff
     return `${hours_diff} hours ago`
   } else if (diff < less_than_month) {
-        return `${Math.floor(diff/(60 * 60 * 24))} days ago`
+    return `${Math.floor(diff / (60 * 60 * 24))} days ago`
   } else if (diff < less_than_year) {
     let month_diff = current_time_obj.getMonth() - time_obj.getMonth()
     month_diff = (month_diff < 0) ? month_diff + 11 : month_diff
@@ -35,7 +35,7 @@ export function get_duration_str(timestamp: string | number): string {
   }
 }
 
-export function add_relative_time(posts: Array<any>): Array<any> {
+export function add_relative_time(posts: any[]): any[] {
   return posts.map((e) => {
     e.relative_time = get_duration_str(e.timestamp)
     return e

@@ -1,5 +1,6 @@
 import db from "../db.js";
 import { get_duration_str } from "./time.js";
+import { escape } from 'html-escaper'
 
 const db_get_all_comments_for_a_post = db.prepare(`
 with recursive comment_tree as (
@@ -70,7 +71,7 @@ function build_html_form_comment_tree(tree: any[] = [], logged_in: boolean, post
       </a>
       </span>
       <p class="comtex">
-        ${e.description_str}
+        ${escape(e.description_str)}
       </p>
       <div class="meta">
         <a href="/item?id=${e.id}" class="mild">

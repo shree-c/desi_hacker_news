@@ -1,7 +1,7 @@
 <% items.forEach(((item,i)=> { %>
 <div class="item">
   <div class="title">
-    <%= i + 1 + ((next_page_number - 2) * 60) %>
+    <%= i + 1 + ((next_page_number - 2) * offset) %>
     <span>
       <a href="/vote?id=<%=item.id %>&what=<%= (item.vote === 1) ? 'unup' : 'up' %>" class="<%= username ? 'clicky' : '' %> 
                 <%= (item.vote === 1) ? 'upd' : 'up' %>">

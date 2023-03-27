@@ -1,5 +1,6 @@
 import db from '../db.js';
 import { get_duration_str } from './time.js';
+import { escape } from 'html-escaper'
 
 const comments_and_replies_for_an_user = db.prepare(`
 WITH recursive ct as (
@@ -92,6 +93,7 @@ function add_context_link(e: any): string {
   return ''
 }
 
+// need to escape html
 function build_thread_html(tree: any[] = []): string {
   let str = ""
   tree.forEach((e) => {
@@ -111,7 +113,7 @@ function build_thread_html(tree: any[] = []): string {
         ${add_context_link(e)}
       </div>
       <p class="comtex">
-        ${e.description_str}
+        ${escape(e.description_str)}
       </p>
       <div class="children">
         ${build_thread_html(e.children)}

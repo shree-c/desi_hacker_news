@@ -14,10 +14,7 @@ import { Request, Response, NextFunction } from "express";
 
 import {
   db_add_post,
-  db_get_main_posts,
   db_create_record,
-  db_does_user_exist,
-  db_get_single_post,
   db_add_comment,
   db_manage_vote,
   add_comment_and_vote_count,
@@ -25,7 +22,10 @@ import {
   db_get_ask_posts,
   db_get_recent_comments,
   db_get_show_posts,
-  db_get_posts_of_a_day
+  db_get_posts_of_a_day,
+  get_single_post,
+  single_user, 
+  get_main_posts
 } from "../lib/sql_functions/transactions.js";
 import {
   check_username_should_not_exist,
@@ -38,53 +38,26 @@ import { gen_cookie, get_username_from_auth_token } from "../lib/cookie.js";
 import { generatePasswordHash, generateSalt } from "../lib/auth/user.js";
 import controller_events from "../events/obj.js";
 import { add_relative_time, get_duration_str, set_to_start_of_utc_day } from "../lib/time.js";
-import { make_thread_html } from '../lib/thread.js';
 import db from '../db.js';
 import { strict as assert } from 'node:assert';
+
 export async function create_post(
   req: Request,
   res: Response,
-  next: NextFunction
 ): Promise<void> {
   req.body.timestamp = new Date().getTime();
   await db_add_post(req.body);
   res.redirect("/");
 }
 
-export async function handle_submit(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  if (!req.username) {
-    res.render("login", { message: "You have to be logged in to submit." });
-  } else {
-    res.render("submit", {});
-  }
-}
-
-export async function get_posts(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  const page_number = (req.query.p && typeof req.query.p === 'string')
-    ? parseInt(req.query.p)
-    : 1;
-  const total_offset = (page_number - 1) * 60;
-  const posts = add_comment_and_vote_count(db_get_main_posts(total_offset), req.username);
-  res.render("index", {
-    items: add_relative_time(posts),
-    next_page_number: page_number + 1,
-    path: req.path,
-    offset: 60
-  });
+export function control_main_posts(username:string, limit:number, offset:number) {
+  const posts = get_main_posts.all({limit, offset, username})
+  return add_relative_time(posts)
 }
 
 export async function handle_login(
   req: Request,
   res: Response,
-  next: NextFunction
 ): Promise<void> {
   if (req.body.new) {
     check_username_rules(req.body.un);
@@ -116,7 +89,7 @@ export async function handle_login(
   }
 }
 
-export function check_login(req: Request, res: Response, next: NextFunction) {
+export function check_login(req: Request, res: Response, next: NextFunction): void {
   if (req.cookies.auth) {
     req.username = get_username_from_auth_token(req.cookies.auth);
     res.locals.username = req.username
@@ -127,66 +100,44 @@ export function check_login(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export function handle_logout(req: Request, res: Response, next: NextFunction) {
+export function handle_logout(req: Request, res: Response): void {
   res.clearCookie("auth");
   controller_events.emit("clearCookie", req.username);
   res.redirect("/");
 }
 
-export function get_user_profile(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  if (!req.query.id) {
-    res.render("user", {
-      error: "no such user",
-    });
-  } else {
-    const user = db_does_user_exist(req.query.id + "");
-    if (!user) {
-      res.render("user", {
-        error: "no such user",
-      });
-    } else {
-      res.render("user", {
-        error: null,
-        user,
-      });
-    }
-  }
+export function control_user_profile(
+  user_id: string
+): object {
+  if (!user_id)
+    throw new Error('invalid request')
+  const user = single_user.get(user_id)
+  if (!user)
+    throw new Error(`user doesn't exist`)
+  return user
 }
 
-export async function get_single_post(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const id = req.query.id;
-  if (!id || typeof id !== "string") {
-    res.status(404).render("404");
-  } else {
-    const post = db_get_single_post(id);
-    if (post) {
-      res.render("single_post", {
-        post: {
-          ...post,
-          relative_time: get_duration_str(post.timestamp),
-        },
-        comment_section: get_comment_section_html_for_a_post(parseInt(id),
-          req.username),
-      });
-    } else {
-      res.status(404).render("404");
-    }
+// need to handle posts that are not roots
+export function control_single_post(
+  post_id: string, username: string
+): object {
+  const numeric_post_id = parseInt(post_id)
+  if (isNaN(numeric_post_id))
+    throw new Error("Invalid post id");
+
+  const post = get_single_post.get(numeric_post_id)
+  if (!post)
+    throw new Error("Post doesn't exist");
+  return {
+    post: add_relative_time([post])[0],
+    comment_section: get_comment_section_html_for_a_post(numeric_post_id, username)
   }
 }
 
 export function handle_comment(
   req: Request,
-  res: Response,
-  next: NextFunction
-) {
+  res: Response
+): void {
   if (!req.username) {
     res.render("login",
       { message: "You have to be logged in to comment." });
@@ -207,7 +158,7 @@ const votes = {
   undw: 'undw'
 }
 
-export function handle_vote(req: Request, res: Response, next: NextFunction) {
+export function handle_vote(req: Request, res: Response): void {
   if (!req.username) {
     res.render("login",
       { message: "You have to be logged in to comment." });
@@ -216,20 +167,21 @@ export function handle_vote(req: Request, res: Response, next: NextFunction) {
       res.status(404).send('bad request')
     } else {
       db_manage_vote(req.query.id, req.username, votes[req.query.what])
+      console.log('voted')
       res.send('ok')
     }
   }
 }
 
 export function handle_reply_link_click
-  (req: Request, res: Response, next: NextFunction) {
+  (req: Request, res: Response): void {
   if (!req.username) {
     res.render("login",
       { message: "You have to be logged in to comment." });
   } else {
     if (typeof req.query.id === 'string' && typeof req.query.goto === 'string') {
-      const post = db_get_single_post(req.query.id)
-      const root_post = db_get_single_post(req.query.goto)
+      const post = get_single_post.get(req.query.id)
+      const root_post = get_single_post.get(req.query.goto)
       res.render("reply", {
         comment: add_relative_time([post])[0],
         root_id: req.query.goto,
@@ -241,38 +193,33 @@ export function handle_reply_link_click
   }
 }
 
-export function handle_threads
-  (req: Request, res: Response, next: NextFunction) {
-  if (typeof req.query.id == 'string') {
-    const page_number = (req.query.p && typeof req.query.p === 'string')
-      ? parseInt(req.query.p)
-      : 1;
-    const offset = (page_number - 1) * 60;
-    res.render('threads', {
-      comments_html: make_thread_html(req.query.id, 30, offset)
-    })
+export function control_reply
+  (req: Request, res: Response): void {
+  if (!req.username) {
+    res.render("login",
+      { message: "You have to be logged in to comment." });
   } else {
-    res.status(400).send('bad request')
+    if (typeof req.query.id === 'string' && typeof req.query.goto === 'string') {
+      const post = get_single_post.get(req.query.id)
+      const root_post = get_single_post.get(req.query.goto)
+      res.render("reply", {
+        comment: add_relative_time([post])[0],
+        root_id: req.query.goto,
+        short_root_post_title: (root_post.title.length < 50) ? root_post.title : root_post.title.slice(0, 51) + '...'
+      })
+    } else {
+      res.send('bad request')
+    }
   }
 }
 
-export function newest
-  (req: Request, res: Response, next: NextFunction) {
-  const page_number = (req.query.p && typeof req.query.p === 'string')
-    ? parseInt(req.query.p)
-    : 1;
-  const total_offset = (page_number - 1) * 15;
+export function control_new
+  (username: string, limit: number, offset: number): any[] {
   const newest_posts = get_newest_posts.all({
-    limit: 15,
-    offset: total_offset
+    limit,
+    offset
   })
-  const posts = add_comment_and_vote_count(newest_posts, req.username);
-  res.render("index", {
-    items: add_relative_time(add_comment_and_vote_count(posts, req.username)),
-    next_page_number: page_number + 1,
-    path: req.path,
-    offset: 15
-  });
+  return add_relative_time(add_comment_and_vote_count(newest_posts, username))
 }
 
 export function control_ask(username: string, limit: number, offset: number): any[] {
@@ -315,7 +262,7 @@ select title, id from postsandcomments where id in (${ids_string})
   return comments_with_added_context_and_relative_time;
 }
 
-export function control_front(username: string, limit: number, offset: number, date: string):any[] {
+export function control_front(username: string, limit: number, offset: number, date: string): any[] {
   let final_date_obj: Date | null = null
   if (date === '') {
     final_date_obj = new Date()

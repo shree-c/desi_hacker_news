@@ -9,12 +9,26 @@ insert into postsandcomments
 values(@url, @title, @description, @username, @timestamp)
 `);
 
-const get_main_posts = db.prepare(`
-select * from postsandcomments where parent is null
-and title NOT like 'Ask DN:%'
-and title NOT like 'Show DN:%'
-ORDER BY timestamp desc
-LIMIT @limit OFFSET @offset
+export const get_main_posts = db.prepare(`
+select *, t.id,
+(select sum(value) from vote where id = t.id group by id) as vote_count, 
+(with recursive comment_tree as (
+  select id
+  from postsandcomments
+  where id = t.id
+  union all
+  select t.id
+  from postsandcomments as t
+  join
+  comment_tree on t.parent = comment_tree.id
+) select count(id) - 1  from comment_tree) as comment_count,
+
+(select value from vote where id = t.id and user = @username) as vote
+from postsandcomments as t where t.parent is NULL
+order by 
+((comment_count + vote_count) / 
+((strftime('%s', 'now') * 1000) -  cast(timestamp as decimal))) * 1000 DESC
+limit @limit offset @offset
 `);
 
 const insert_user = db.prepare(`
@@ -22,7 +36,7 @@ insert into users (username, password, email, timestamp)
  values(@username, @password, @email, @timestamp)
 `);
 
-const single_user = db.prepare(`
+export const single_user = db.prepare(`
 select * from users where username = ?
 `);
 
@@ -39,7 +53,7 @@ const remove_cookie = db.prepare(`
   delete from session where username = ?
 `);
 
-const get_single_post = db.prepare(`
+export const get_single_post = db.prepare(`
   select * from postsandcomments where id = ?
 `);
 
@@ -141,7 +155,7 @@ select *, t.id,
   join
   comment_tree on t.parent = comment_tree.id
 ) select count(id) - 1  from comment_tree) as comment_count,
-(select value from vote where id = t.id and username = @username) as vote
+(select value from vote where id = t.id and user = @username) as vote
 from postsandcomments as t where t.parent is NULL
 and 
 (cast(timestamp as decimal) >= @start and cast(timestamp as decimal) <= @end)
@@ -177,11 +191,11 @@ export function db_does_user_exist(un: string): any {
   return single_user.get(un);
 }
 
-export function db_create_record(req_obj) {
+export function db_create_record({ un, pass }) {
   try {
     insert_user.run({
-      username: req_obj.un,
-      password: req_obj.pass,
+      username: un,
+      password: pass,
       email: "",
       timestamp: new Date().getTime() + "",
     });
@@ -217,12 +231,6 @@ export function db_clear_cookie(un: string): void {
   remove_cookie.run(un);
 }
 
-export function db_get_single_post(
-  post_id: string
-): yup.InferType<typeof post_schema> {
-  return get_single_post.get(post_id);
-}
-
 export function db_add_comment(
   username: string,
   text: string,
@@ -251,42 +259,49 @@ export function db_manage_vote(
     id,
     username
   })
-  if (!existing_vote || existing_vote.value === 0) {
+  if (!existing_vote) {
     insert_vote.run({
       id,
       username,
       timestamp: (new Date()).getTime(),
       value: vote_vals[vote]
     })
-  } else {
-    let final_vote_value = existing_vote.value
-    if (existing_vote.value === 1) {
-      if (vote === 'unup') {
-        final_vote_value = 0
-      } else if (vote === 'dw') {
-        final_vote_value = -1
-      }
-    } else if (existing_vote.value === -1) {
-      if (vote === 'undw') {
-        final_vote_value = 0
-      } else if (vote === 'up') {
-        final_vote_value = 1
-      }
-    }
-    if (final_vote_value === 0) {
-      delete_vote.run({
-        id,
-        username
-      })
+    console.log('inserted new vote', vote_vals[vote]);
+    return
+  }
+  let final_vote_value = existing_vote.value
+  if (existing_vote.value === 1) {
+    if (vote === 'unup') {
+      final_vote_value = 0
+    } else if (vote === 'dw') {
+      final_vote_value = -1
+    } else if (vote === 'up') {
       return
     }
-    update_vote.run({
+  } else if (existing_vote.value === -1) {
+    if (vote === 'undw') {
+      final_vote_value = 0
+    } else if (vote === 'up') {
+      final_vote_value = 1
+    } else if (vote === 'dw') {
+      return
+    }
+  } 
+  // delete vote if the sum turns out to be zero
+  if (final_vote_value === 0) {
+    delete_vote.run({
       id,
-      username,
-      timestamp: (new Date()).getTime(),
-      value: final_vote_value
+      username
     })
+    return
   }
+  update_vote.run({
+    id,
+   username,
+    timestamp: (new Date()).getTime(),
+    value: final_vote_value
+  })
+  console.log('inserted final vote', final_vote_value)
 }
 
 export function add_comment_and_vote_count(posts: any[], username: string | undefined): any[] {
