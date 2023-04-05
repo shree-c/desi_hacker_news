@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import { control_ask, control_front, control_recent_comments, control_show, control_new, control_single_post, control_user_profile, control_main_posts } from '../controllers/main.js';
 import env from 'env-var'
 import { make_thread_html } from '../lib/thread.js';
+import { ParsedQs } from 'qs'
 
-function return_page_number(page: string): number {
-  let page_number = parseInt(page)
+function return_page_number(page: ParsedQs): number {
+  // .p can be undefined
+  let page_number = parseInt((!page.p) ? '1' : page.p.toString())
   return isNaN(page_number) ? page_number : 1
 }
 
@@ -20,7 +22,7 @@ const THREAD_EACH_PAGE_POSTS = env.get('THREAD_EACH_PAGE_POSTS').required().asIn
 
 export function view_ask
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const total_offset = (page_number - 1) * ASK_EACH_PAGE_POSTS;
   const asks = control_ask(req.username, ASK_EACH_PAGE_POSTS, total_offset)
   res.render('index', {
@@ -34,7 +36,8 @@ export function view_ask
 
 export function view_comments
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let x = req.query.p;
+  let page_number = return_page_number(req.query);
   const total_offset = (page_number - 1) * ASK_EACH_PAGE_POSTS;
   const recent_comments = control_recent_comments(THREAD_EACH_PAGE_POSTS, total_offset);
   res.render('comments', {
@@ -48,7 +51,7 @@ export function view_comments
 
 export function view_show
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const total_offset = (page_number - 1) * ASK_EACH_PAGE_POSTS;
   const asks = control_show(req.username, ASK_EACH_PAGE_POSTS, total_offset)
   res.render('index', {
@@ -62,7 +65,7 @@ export function view_show
 
 export function view_front
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const total_offset = (page_number - 1) * ASK_EACH_PAGE_POSTS;
   if (!req.query.day)
     req.query.day = ''
@@ -80,7 +83,7 @@ export function view_front
     path: req.path,
     offset: MAIN_EACH_PAGE_POSTS,
     next_page_number: page_number + 1,
-    title: `Desi Hacker News | Front ${req.query.date}`,
+    title: `Desi Hacker News | Front ${date_pointer.toUTCString()}`,
     go_back: go_back(date_pointer),
     go_forward: go_forward(date_pointer, new Date()),
     title_date: date_pointer.toUTCString()
@@ -89,7 +92,7 @@ export function view_front
 
 export function view_new
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const total_offset = (page_number - 1) * ASK_EACH_PAGE_POSTS;
   const items = control_new(req.username, ASK_EACH_PAGE_POSTS, total_offset)
   res.render("index", {
@@ -102,7 +105,7 @@ export function view_new
 
 export function view_threads
   (req: Request, res: Response): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const offset = (page_number - 1) * THREAD_EACH_PAGE_POSTS;
   res.render('threads', {
     comments_html: make_thread_html(req.query.id.toString(), THREAD_EACH_PAGE_POSTS, offset)
@@ -132,7 +135,7 @@ export function view_main_posts(
   req: Request,
   res: Response
 ): void {
-  let page_number = return_page_number(req.query.p.toString());
+  let page_number = return_page_number(req.query);
   const offset = (page_number - 1) * MAIN_EACH_PAGE_POSTS;
   const posts = control_main_posts(req.username, MAIN_EACH_PAGE_POSTS, offset)
   res.render('index', {
@@ -153,4 +156,3 @@ export function view_submit(
     res.render("submit", {});
   }
 }
-
