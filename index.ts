@@ -3,6 +3,7 @@ import main_router from "./routes/main.js";
 import env from "env-var";
 import error_map from "./lib/error_map.js";
 import cookieParser from "cookie-parser";
+import {Response} from "express"
 import controller_events from "./events/obj.js";
 import { handle_controller_events } from "./events/event_handlers.js";
 
@@ -35,13 +36,13 @@ app.use((req, res, next) => {
 
 app.use("/", main_router);
 
-app.use((req, res, next) => {
+app.use((_, res:Response) => {
   res.status(404).render('404', {
     title: 'Desi Hacker News | NOT FOUND'
   })
 })
 
-app.use((err, req, res, next) => {
+app.use((err, _, res:Response, next) => {
   console.error(err);
   res.send(err.message || error_map[err.message] || "internal server error");
 });
